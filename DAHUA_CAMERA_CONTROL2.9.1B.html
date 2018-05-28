@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="utf-8">
+	<title>Ovládaní kamery</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+	#LED{
+		border-radius: 50%;
+		background-color:orange;
+		cursor: unset;
+		color:white
+	}
+	</style>
+</head>
+<body onkeydown="tlacikozmack(event)" onkeyup="tlacitkopust(event)" onload="startup()">
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="jumbotron text-center">
+			<h1>DAHUA CAMERA CONTROL</h1>
+				<p><strong style="color: #ff0000; background-color: yellow">Warring! <i
+						class="fa fa-exclamation-triangle"
+						aria-hidden="true"></i>
+					CONTAIN IP OF CAMERA WILL NOT WORK IF CHANGED
+				</strong></p>
+			</div>
+			<div class="row">
+				<noscript><strong>YOUR BROSWER WILL NOT WORK IS TOO OLD</strong>
+				</noscript>
+				<p>FOR ACTIVATION CLICK ON SOMETHING
+				</p>
+				<div class="col-xs-12 well">
+					<h2>EMERGENCY STOP(RESET) AND CONECTION CHECK</h2>
+					<div class="row">
+						<div class="col-xs-6">
+					<button id="reset" onmousedown="stopAllandReset()" onmouseup="resetpust()"
+							class="btn btn-info btn-lg">
+						<i class="fa fa-refresh" aria-hidden="true"></i>
+					</button>
+					</div>
+					<div class="col-xs-6"><i class="btn btn-lg" id="LED">?</i></div>
+					</div>
+				</div>
+				<div class="col-xs-12 well">
+					<h2>CONCTOLS</h2>
+					<div class="row">
+						<div class="col-xs-2">
+						</div>
+						<div class="col-xs-1">
+							<button id="up" onmousedown="stlac('Up',1,'up')" onmouseup="pustmys('Up',1,'up')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-arrow-up" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-1"></div>
+						<div class="btn-group">
+							<button id="left" onmousedown="stlac('Left',1,'left')"
+									onmouseup="pustmys('Left',1,'left')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-arrow-left" aria-hidden="true"></i>
+							</button>
+							<button id="down" onmousedown="stlac('Down',1,'down')"
+									onmouseup="pustmys('Down',1,'down')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-arrow-down" aria-hidden="true"></i>
+							</button>
+							<button id="right" onmousedown="stlac('Right',1,'right')"
+									onmouseup="pustmys('Right',1,'right')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-arrow-right" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+					<div class="row">
+						<p>HINT:cursor arows</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-12 well">
+						<h2>Zoom</h2>
+						<div class="row">
+							<div class="col-xs-1"></div>
+							<button id="zoom+" onmousedown="stlac('ZoomTele',1,'zoom+')"
+									onmouseup="pustmys('ZoomTele',1,'zoom+')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-search-plus" aria-hidden="true"></i>
+							</button>
+							<button id="zoom-" onmousedown="stlac('ZoomWide',1,'zoom-')"
+									onmouseup="pustmys('ZoomWide',1,'zoom-')"
+									class="btn btn-info btn-lg"><i
+									class="fa fa-search-minus" aria-hidden="true"></i>
+							</button>
+						</div>
+						<br>
+						<p>HINT:<br>
+							p=Closer <br>
+							o=Further</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-12 well">
+						<div class="row">
+							<div class="col-xs-12">
+								<h2>Clone:</h2>
+								<div class="row">
+									<div class="col-xs-12">
+										<div class="row">
+											<div class="col-xs-1"></div>
+											<button id="iris+" onmousedown="clona('IrisLarge',1,'iris+')"
+													onmouseup="resetclona('iris+')"
+													class="btn btn-info btn-lg"><i class="fa fa-plus"
+																				  aria-hidden="true"></i>
+											</button>
+											<button id="iris-" onmousedown="clona('IrisSmall',1,'iris-')"
+													onmouseup="resetclona('iris-')"
+													class="btn btn-info btn-lg"><i class="fa fa-minus"
+																				  aria-hidden="true"></i>
+											</button>
+										</div>
+										<p>HINT :<br>
+											&nbsp &nbsp+/− on keyboard
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	///IP IS HERE y
+	var ip="XXX.XXX.XXX.XXX";///<--change what is in ""
+	
+	
+	///FOR non programers do not touch nothing furder 
+	
+	var notkliknuto=true;///< holding if something was activated
+	var conected=false;///<holdning conection state 
+	var delay=2000;///<cheking of state of conection ( 2s)
+
+	//Simplyfiing sending request on camera
+	function makeRequest(what){
+		let xhr=new XMLHttpRequest();
+		xhr.open('GET',"http://"+ip+"/"+what,true);
+		xhr.withCredentials=true;
+		return xhr;
+	}
+	
+	//symplyfiing  sending comands for camera 
+	function comand(what){
+	let xhr=makeRequest(what);
+	react(xhr);
+	xhr.send();
+	}
+
+	///symplyfiing multicomands send in succesion 
+	function multicomand(one,two){
+	let xhr1=makeRequest(one);
+	let xhr2=makeRequest(two);
+	react(xhr1);
+	react(xhr2);
+	xhr1.send();
+	xhr2.send();
+	}
+
+
+	///counter of unsucesfull conection
+	var pocitadlo=0;
+	
+	//react on states of conection 
+	function react(xhr){
+		xhr.onerror=nereaguje();
+		xhr.onload=reaguje();
+		xhr.ontimeout=nereaguje();
+		if(pocitadlo>300){pocitadlo=0;console.clear();}
+	}
+
+	///holding where is LED 
+	let led=document.getElementById("LED");
+	/// CHANGING STATE OF LED ON RED AND ICREMENT 
+	function nereaguje(){
+		if(conected){
+		led.innerHTML="X";
+		led.style.backgroundColor="red";
+		conected=false;
+		}
+		pocitadlo++;
+		}
+		
+	/// LIKE BEFORE but inverse
+	function reaguje(){
+		if(!conected){
+		led.innerHTML="✔";
+		led.style.backgroundColor="green";
+		conected=true;}
+	}
+	
+	///INIT OF EVERYTHING
+	function startup(){
+		function pom(){conected=true;nereaguje();}
+		let xhr=makeRequest("cgi-bin/magicBox.cgi?action=getHardwareVersion");// 1st login of user
+		xhr.onerror=pom();
+		xhr.onload=reaguje();
+		xhr.ontimeout=pom();
+		xhr.send();
+		xhr.onloadend=function(){window.setInterval(heartbeet,delay);};
+	}
+	
+	///cheking state of conection
+	function heartbeet(){
+		let xhr=makeRequest("cgi-bin/magicBox.cgi?action=getHardwareVersion");
+		xhr.timeout=delay/2;
+		react(xhr);
+		xhr.send();
+	}
+
+	//reacting on mouseclick
+	function stlac(co,rychlost,id){
+		if(notkliknuto){
+			document.getElementById(id).className="btn btn-danger btn-lg";;
+			comand("cgi-bin/ptz.cgi?action=start&channel=0&code="+co+"&arg1=0&arg2="+rychlost.toString()+"&arg3=0");
+			notkliknuto=false;
+		}
+	}
+	// reacting on mouserelase
+	function pustmys(co, rychlost, id){
+		document.getElementById(id).className="btn btn-info btn-lg";
+		comand("cgi-bin/ptz.cgi?action=stop&channel=0&code="+co+"&arg1=0&arg2="+rychlost.toString()+"&arg3=0");
+		notkliknuto=true;
+	}
+	//same as before but  stoping clone imieadly
+	function clona(co, rychlost, id){
+		if(notkliknuto){
+			document.getElementById(id).className="btn btn-danger btn-lg";
+			multicomand("cgi-bin/ptz.cgi?action=start&channel=0&code="+co+"&arg1=0&arg2="+rychlost.toString()+"&arg3=0","cgi-bin/ptz.cgi?action=stop&channel=0&code="+co+"&arg1=0&arg2="+rychlost.toString()+"&arg3=0");
+			notkliknuto=false;
+		}
+	}
+	//graphical emulation of mouserelase
+	function resetclona(id){
+		document.getElementById(id).className="btn btn-info btn-lg";
+		notkliknuto=true;
+	}
+
+	var nezmackuto=true; /// used for reset 
+	var jesteneresetovano=true;
+	
+	//reset release 
+	function resetpust(){
+		jesteneresetovano=true;
+		document.getElementById("reset").className="btn btn-info btn-lg";
+	}
+
+	function stopAllandReset(){
+		if(jesteneresetovano){
+			nezmackuto=true;
+			notkliknuto=true;
+			pustmys('Up',1,'up');
+			pustmys('Down',1,'down');
+			pustmys('Left',1,'left');
+			pustmys('Right',1,'right');
+			pustmys('ZoomTele',1,'zoom+');
+			pustmys('ZoomWide',1,'zoom-');
+			pustmys('IrisLarge',1,'iris+');
+			pustmys('IrisSmall',1,'iris-');
+			document.getElementById("reset").className="btn btn-danger btn-lg";
+			jesteneresetovano=false;
+		}
+	}
+
+	///decode of keydown
+	function tlacikozmack(event){
+		if (nezmackuto){
+			nezmackuto=false;
+			let x=event.which||event.keyCode;
+			switch (x){
+				case 38:
+					stlac('Up',1,'up');
+					break;
+				case 40:
+					stlac('Down',1,'down');
+					break;
+				case 37:
+					stlac('Left',1,'left');
+					break;
+				case 39:
+					stlac('Right',1,'right');
+					break;
+				case 80:
+					stlac('ZoomTele',1,'zoom+');
+					break;
+				case 79:
+					stlac('ZoomWide',1,'zoom-');
+					break;
+				case 107:
+					clona('IrisLarge',1,'iris+');
+					break;
+				case 109:
+					clona('IrisSmall',1,'iris-');
+					break;
+			}
+		}
+	}
+	//decode of keyup
+	function tlacitkopust(event){
+		nezmackuto=true;
+		let x=event.which||event.keyCode;
+		switch (x){
+			case 38:
+				pustmys('Up',1,'up');
+				break;
+			case 40:
+				pustmys('Down',1,'down');
+				break;
+			case 37:
+				pustmys('Left',1,'left');
+				break;
+			case 39:
+				pustmys('Right',1,'right');
+				break;
+			case 80:
+				pustmys('ZoomTele',1,'zoom+');
+				break;
+			case 79:
+				pustmys('ZoomWide',1,'zoom-');
+				break;
+			case 107:
+				resetclona('iris+');
+				break;
+			case 109:
+				resetclona('iris-');
+				break;
+		}
+	}
+</script>
+</body>
+</html>

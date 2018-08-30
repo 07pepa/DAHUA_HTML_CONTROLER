@@ -1,2 +1,10 @@
 # DAHUA_HTML_CONTROLER
-DAHUA web page controler with javascript
+Lightweight DAHUA web page controller done with javascript. 
+supports cursor control
+
+
+
+
+## Problems
+* Currently suffers from CORCS during checking availability of camera.  
+* usage of czech language in code and typos
